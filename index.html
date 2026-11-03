@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 学习法 · 交互式手册</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --ink: #1f2430; --sub: #6b7280;
+    --accent: #2f6fed; --accent-soft: #e8f0fe; --ok: #16a34a; --ok-soft: #e7f6ec;
+    --warn: #d97706; --warn-soft: #fef3e2; --bad: #dc2626; --bad-soft: #fdeaea;
+    --line: #e5e7eb; --quote: #f0f4ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--ink); line-height: 1.7; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 24px 16px 80px; }
+  header { text-align: center; padding: 28px 0 8px; }
+  header h1 { font-size: 30px; margin-bottom: 6px; }
+  header p { color: var(--sub); font-size: 15px; }
+  .progress-box { position: sticky; top: 0; z-index: 50; background: var(--bg); padding: 12px 0 10px; border-bottom: 1px solid var(--line); margin: 10px 0 6px; }
+  .progress-row { display: flex; align-items: center; gap: 12px; }
+  .bar { flex: 1; height: 10px; background: var(--line); border-radius: 6px; overflow: hidden; }
+  .bar > div { height: 100%; width: 0%; background: linear-gradient(90deg, #2f6fed, #16a34a); border-radius: 6px; transition: width .4s; }
+  .pct { font-size: 14px; color: var(--sub); min-width: 64px; text-align: right; }
+  .method { background: var(--card); border: 1px solid var(--line); border-radius: 14px; margin: 18px 0; overflow: hidden; }
+  .method-head { display: flex; align-items: center; gap: 12px; padding: 16px 18px; cursor: pointer; user-select: none; }
+  .method-head:hover { background: #fafbfc; }
+  .num { width: 38px; height: 38px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 17px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .method.done .num { background: var(--ok-soft); color: var(--ok); }
+  .method-head h2 { font-size: 18px; flex: 1; }
+  .arrow { color: var(--sub); transition: transform .25s; font-size: 13px; }
+  .method.open .arrow { transform: rotate(90deg); }
+  .method-body { display: none; padding: 4px 18px 18px; border-top: 1px dashed var(--line); }
+  .method.open .method-body { display: block; }
+  .why { color: var(--sub); margin: 12px 0; font-size: 15px; }
+  .prompt { background: var(--quote); border-left: 4px solid var(--accent); border-radius: 8px; padding: 12px 14px; font-size: 15px; position: relative; }
+  .prompt .copy { position: absolute; top: 8px; right: 8px; border: none; background: var(--accent); color: #fff; border-radius: 6px; font-size: 12px; padding: 4px 10px; cursor: pointer; }
+  .prompt .copy:hover { opacity: .85; }
+  .point { margin-top: 12px; font-size: 15px; }
+  .point b { color: var(--accent); }
+  .done-row { margin-top: 14px; display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--sub); }
+  .done-row input { width: 18px; height: 18px; accent-color: var(--ok); cursor: pointer; }
+  .quiz { margin-top: 16px; border-top: 1px dashed var(--line); padding-top: 14px; }
+  .quiz h3 { font-size: 15px; margin-bottom: 10px; color: var(--ink); }
+  .q { margin-bottom: 14px; }
+  .q .qt { font-size: 15px; margin-bottom: 6px; }
+  .opt { display: block; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; margin: 6px 0; cursor: pointer; font-size: 14px; transition: all .15s; }
+  .opt:hover { border-color: var(--accent); background: #fafbff; }
+  .opt.right { border-color: var(--ok); background: var(--ok-soft); }
+  .opt.wrong { border-color: var(--bad); background: var(--bad-soft); }
+  .opt.dim { opacity: .55; }
+  .exp { display: none; font-size: 13.5px; color: var(--sub); background: #f8f9fb; border-radius: 8px; padding: 8px 12px; margin-top: 6px; }
+  .exp.show { display: block; }
+  .ladder { margin: 18px 0; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+  .ladder h2 { font-size: 18px; margin-bottom: 4px; }
+  .ladder p.tip { color: var(--sub); font-size: 14px; margin-bottom: 12px; }
+  .lv { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin: 8px 0; cursor: pointer; font-size: 15px; transition: all .15s; }
+  .lv:hover { border-color: var(--accent); }
+  .lv.on { border-color: var(--accent); background: var(--accent-soft); }
+  .lv .tag { font-size: 12px; color: var(--sub); margin-left: auto; white-space: nowrap; }
+  .cards { margin: 18px 0; }
+  .cards h2 { font-size: 18px; margin-bottom: 12px; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  .flip { perspective: 900px; height: 150px; cursor: pointer; }
+  .flip-inner { position: relative; width: 100%; height: 100%; transition: transform .5s; transform-style: preserve-3d; }
+  .flip.flipped .flip-inner { transform: rotateY(180deg); }
+  .face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 14px; text-align: center; font-size: 14.5px; }
+  .face.front { background: var(--accent); color: #fff; font-weight: 600; font-size: 16px; }
+  .face.front small { font-weight: 400; font-size: 11.5px; opacity: .8; margin-top: 8px; }
+  .face.back { background: var(--card); border: 1px solid var(--line); transform: rotateY(180deg); color: var(--ink); }
+  .pipeline { margin: 18px 0; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+  .pipeline h2 { font-size: 18px; margin-bottom: 12px; }
+  .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13.5px; }
+  .flow .step { background: var(--accent-soft); color: var(--accent); border-radius: 8px; padding: 5px 10px; font-weight: 600; }
+  .flow .ar { color: var(--sub); }
+  .reset-row { text-align: center; margin-top: 28px; }
+  .reset-row button { border: 1px solid var(--line); background: var(--card); color: var(--sub); border-radius: 8px; padding: 8px 18px; cursor: pointer; font-size: 13px; }
+  footer { text-align: center; color: var(--sub); font-size: 13px; margin-top: 30px; }
+  footer a { color: var(--accent); text-decoration: none; }
+  @media (max-width: 560px) { header h1 { font-size: 24px; } .card-grid { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>AI 学习法 · 交互式手册</h1>
+    <p>用 AI 助手高效学会一门新技能的 7 个方法 —— 适用于 Codex / Claude Code / Cursor / ChatGPT / Kimi / GLM / DeepSeek 等任何助手</p>
+  </header>
+
+  <div class="progress-box">
+    <div class="progress-row">
+      <div class="bar"><div id="barFill"></div></div>
+      <div class="pct" id="pctText">0%</div>
+    </div>
+  </div>
+
+  <div class="ladder">
+    <h2>📍 先定位：你现在在哪一层？</h2>
+    <p class="tip">点选你当前的水平（会保存在本机），再决定从哪个方法开始用。</p>
+    <div class="lv" data-lv="1">L1 完全新手 —— 听说过这个词，没动手过 <span class="tag">先用方法 01–03</span></div>
+    <div class="lv" data-lv="2">L2 跟着教程做过，离开教程就不会 <span class="tag">重点用方法 04、05</span></div>
+    <div class="lv" data-lv="3">L3 能做小项目，但说不清原理 <span class="tag">重点用方法 05、07</span></div>
+    <div class="lv" data-lv="4">L4 能独立做项目，讲给别人听费劲 <span class="tag">重点用方法 06、07</span></div>
+    <div class="lv" data-lv="5">L5 能独立做项目并讲明白 —— 可以学下一个主题了 <span class="tag">换主题，重走流水线</span></div>
+  </div>
+
+  <div id="methods"></div>
+
+  <div class="cards">
+    <h2>🗂️ 速查翻卡（点击卡片翻面）</h2>
+    <p class="tip" style="color:var(--sub);font-size:14px;margin-bottom:12px;">考前 / 面试前 / 组会前，快速把脑子里的结构唤醒。</p>
+    <div class="card-grid" id="cardGrid"></div>
+  </div>
+
+  <div class="pipeline">
+    <h2>🔗 7 个方法怎么组合</h2>
+    <div class="flow">
+      <span class="step">01 阶梯</span><span class="ar">→</span>
+      <span class="step">02 筛资源</span><span class="ar">→</span>
+      <span class="step">03 找 20%</span><span class="ar">→</span>
+      <span class="step">04 执行</span><span class="ar">→</span>
+      <span class="step">05 考官</span><span class="ar">→</span>
+      <span class="step">06 速查表</span><span class="ar">→</span>
+      <span class="step">07 费曼</span>
+    </div>
+    <p class="why" style="margin-top:12px;">它们不是并列的技巧，而是一条学习流水线：AI 负责拆解、筛选、出题、批改；你负责动手、回答、复述。学下一个新主题时，从头再走一遍即可。</p>
+  </div>
+
+  <div class="reset-row"><button id="resetBtn">清空本机学习进度</button></div>
+  <footer>本页数据仅保存在你的浏览器本地（localStorage）· <a href="https://github.com/escatial/ai-learning-playbook">GitHub 仓库</a></footer>
+</div>
+
+<script>
+const METHODS = [
+  {
+    n: "01", title: "先让 AI 搭一套学习阶梯",
+    why: "基础概念没连起来，就去看高级教程，结果往往是「看懂了，但不会做」。第一步不是学，而是先拿一张地图：知道自己现在在哪一层、下一步该补什么、什么时候算真的过关。",
+    prompt: "请把「XX」拆成 5 个学习等级，从完全新手到能独立做项目。每一层告诉我：① 需要掌握什么；② 常见错误是什么；③ 应该做什么练习；④ 达到什么标准才能进入下一层。",
+    point: "有了地图，后面的学习才不会迷路。",
+    quiz: [
+      { q: "学新东西一上来就冲复杂项目，最容易出现的状况是？",
+        opts: ["每个词都眼熟，真到自己动手又接不上", "学得太快，消化不了", "工具装不上", "时间不够用"], a: 0,
+        exp: "基础概念没连起来就看高级教程，典型症状就是「每个词都眼熟，动手接不上」——所以第一步先搭阶梯拿地图。" },
+      { q: "「学习阶梯」每一层必须回答的四个问题，不包括？",
+        opts: ["需要掌握什么", "常见错误是什么", "应该买什么书", "达到什么标准才能进入下一层"], a: 2,
+        exp: "四问是：掌握什么 / 常见错误 / 做什么练习 / 过关标准。买什么书是方法 02 筛资源的事。" }
+    ]
+  },
+  {
+    n: "02", title: "让 AI 帮你筛资源",
+    why: "书、课程、视频、博客、社群，收藏了一堆，最后哪个都没开始。让 AI 做筛选，是在减少选择成本。",
+    prompt: "我想学习「XX」。请帮我筛选最值得看的 5 个资源。每个资源说明：适合谁、难度如何、该怎么用、哪些部分可以跳过。最后用这 5 个资源，帮我设计一个 7 天学习路径。",
+    point: "真正有用的学习路径不需要堆满资料——能看完、能练、能复盘，才有价值。",
+    quiz: [
+      { q: "筛选资源的核心目的是？",
+        opts: ["收藏更多好资料", "减少选择成本", "找到最便宜的课程", "关注更多博主"], a: 1,
+        exp: "资源太多本身就是学习障碍。筛资源是减少选择成本，而不是扩充收藏夹。" },
+      { q: "什么样的学习路径才算有价值？",
+        opts: ["资料够全够厚", "能看完、能练、能复盘", "名师讲的", "时间越长约好"], a: 1,
+        exp: "能看完、能练、能复盘——这是判断路径价值的三个标准，堆满资料没有意义。" }
+    ]
+  },
+  {
+    n: "03", title: "让 AI 找出最值得先学的 20%",
+    why: "任何技能里，都有一部分内容最先带来回报。学剪辑不用先研究所有插件，学写作不用先背理论，学编程不用一上来啃完整文档。",
+    prompt: "我想用 20 小时学习「XX」。请找出这个主题里最重要的 20% 内容，并设计成 10 次学习计划，每次 2 小时。每次都要包含：学习目标、练习任务、复盘问题。",
+    point: "大目标被拆成今天就能完成的一小块。「大而虚」一旦变成 10 次明确的训练，执行难度会低很多。",
+    quiz: [
+      { q: "用 20 小时学一个主题，推荐怎么拆？",
+        opts: ["最重要的 20% 内容 → 10 次 × 2 小时", "5 次 × 4 小时突击", "先通读全部文档", "每天想学多久学多久"], a: 0,
+        exp: "先找最重要的 20%，再拆成 10 次、每次 2 小时的明确训练——每次都有目标、练习、复盘。" },
+      { q: "每次训练计划必须包含的三样东西是？",
+        opts: ["视频、笔记、习题", "学习目标、练习任务、复盘问题", "大纲、案例、测验", "课程、社区、项目"], a: 1,
+        exp: "学习目标、练习任务、复盘问题——三者缺一，训练就退回了「大而虚」。" }
+    ]
+  },
+  {
+    n: "04", title: "按计划执行，让 AI 盯进度",
+    why: "计划再好，不执行等于零。10 次训练拿到手后，关键是用固定的节奏把每一次跑完。",
+    prompt: "我今天进行第 N 次训练（学习目标：…）。请先用通俗方式帮我过一遍概念；练习中我卡住会把报错发给你；最后我会回答复盘问题，请你判断这次是否过关、能否进入下一块。",
+    point: "每次 2 小时的参考节奏：前 30 分钟学概念 → 中间 70 分钟动手练 → 最后 20 分钟复盘。卡住就把报错丢给 AI，别自己闷耗超过半小时。每次结束把完成情况告诉 AI 对进度，缺一次当场补，不积压。",
+    quiz: [
+      { q: "一次 2 小时训练的参考节奏是？",
+        opts: ["全程看视频", "30 分钟学概念 + 70 分钟动手练 + 20 分钟复盘", "120 分钟都在刷题", "先练 2 小时再学理论"], a: 1,
+        exp: "30 / 70 / 20：先学概念，大头时间动手练，最后留 20 分钟回答复盘问题。" },
+      { q: "练习时卡住了，正确做法是？",
+        opts: ["自己闷头研究到解决为止", "直接跳过这部分", "把报错或卡点丢给 AI，别耗超过半小时", "换一个更容易的主题"], a: 2,
+        exp: "卡住超过半小时就该把报错/卡点直接丢给 AI；自己闷耗是最常见的执行杀手。" }
+    ]
+  },
+  {
+    n: "05", title: "让 AI 当考官，一次只问一个问题",
+    why: "我们以为自己学会了，其实只是看懂了别人怎么讲。真正检验理解，要靠自己说出来、做出来、答出来。",
+    prompt: "我刚学完「XX」，请你当我的考官。一次只问我一个问题，从简单到困难。我回答后，请给我打分，并指出：哪里对，哪里错，哪里理解不完整。然后只重新解释我没掌握的部分。",
+    point: "最关键的是一次只问一个。一问一答，反馈更具体，薄弱点立刻暴露，AI 也能针对那一小块重新讲。",
+    quiz: [
+      { q: "考官模式最关键的一条规则是？",
+        opts: ["题目越多越好", "一次只问一个问题", "先考最难的内容", "让 AI 直接给答案"], a: 1,
+        exp: "一次只问一个：一问一答反馈更具体，AI 能针对你暴露的那一块重新讲。一口气 20 道题没有这个效果。" },
+      { q: "你回答后，AI 应该做什么？",
+        opts: ["只说对或错", "给打分，指出哪里对、哪里错、哪里不完整，并只重讲你没掌握的部分", "把整章重新讲一遍", "换一批更难的题"], a: 1,
+        exp: "打分 + 指出对错与不完整 + 只重讲没掌握的部分——反馈要具体，重讲要最小化。" }
+    ]
+  },
+  {
+    n: "06", title: "每学完一块，让 AI 做一页速查表",
+    why: "不要把整段聊天记录存下来——太长，后面基本不会再翻。每学完一个主题，让 AI 压成一页。",
+    prompt: "请把我刚刚学的内容整理成一页速查表。包含：① 一句话定义；② 核心概念；③ 真实例子；④ 常见错误；⑤ 使用前检查清单；⑥ 5 个自测问题。",
+    point: "考试前、面试前、组会前、开题前、做项目之前看。不用重新学一遍，只要把脑子里的结构唤醒。",
+    quiz: [
+      { q: "速查表的六要素不包括？",
+        opts: ["一句话定义", "使用前检查清单", "完整聊天记录", "5 个自测问题"], a: 2,
+        exp: "六要素：一句话定义 / 核心概念 / 真实例子 / 常见错误 / 检查清单 / 5 个自测问题。完整聊天记录恰恰是要丢掉的。" },
+      { q: "速查表的最佳使用方式是？",
+        opts: ["每天从头读一遍", "替代正式学习材料", "在考试/面试/组会/开题/做项目前，唤醒已有结构", "发给朋友炫耀"], a: 2,
+        exp: "速查表不是学习材料，是唤醒器——考前看一眼，把脑子里的结构激活。" }
+    ]
+  },
+  {
+    n: "07", title: "用费曼学习法，让 AI 逼你讲明白",
+    why: "如果一个概念你讲不清，大概率还没真正理解。看答案的时候很清楚；等到自己开口讲，漏洞才会冒出来。",
+    prompt: "请先用 12 岁孩子能听懂的话解释「XX」。然后我会用我自己的话复述。你帮我判断哪里讲对了，哪里漏了，哪里混淆了，哪里用了听起来高级但其实没说明白的词。然后让我重新讲一遍，直到我讲清楚为止。",
+    point: "特别适合学抽象概念。讲不清 = 没真懂；能讲明白才算学会。",
+    quiz: [
+      { q: "费曼学习法判断「是否真懂」的判据是？",
+        opts: ["能背出定义", "做题正确率高", "能用自己的话讲清楚", "笔记记得全"], a: 2,
+        exp: "讲不清 = 没真懂。能用自己的话把概念讲明白，才算真正学会。" },
+      { q: "复述时，AI 要帮你揪出的「假高级」是指？",
+        opts: ["用了听起来高级但其实没说明白的词", "语速太慢", "例子太简单", "讲了太久"], a: 0,
+        exp: "「听起来高级但其实没说明白」的词是理解漏洞的伪装。揪出来、替换掉，直到讲清楚为止。" }
+    ]
+  }
+];
+
+const CARDS = [
+  { f: "01 学习阶梯", b: "先拿地图：知道自己在哪层、下一步补什么、什么时候算过关。" },
+  { f: "02 筛资源", b: "只留 5 个资源 + 7 天路径。能看完、能练、能复盘才有价值。" },
+  { f: "03 找 20%", b: "20 小时 = 最重要的 20% 内容 × 10 次训练。每次都有目标、练习、复盘。" },
+  { f: "04 执行", b: "节奏 30/70/20：30 分钟学概念、70 分钟动手练、20 分钟复盘。卡住就问，别闷耗。" },
+  { f: "05 考官", b: "一次只问一个问题。打分 + 指出对错 + 只重讲没掌握的部分。" },
+  { f: "06 速查表", b: "六要素压成一页：定义/概念/例子/错误/清单/自测。考前唤醒，不用重学。" },
+  { f: "07 费曼", b: "讲给 12 岁孩子听。AI 揪漏、揪混、揪「假高级」，重讲直到讲清楚。" }
+];
+
+/* ---------- state ---------- */
+const KEY = "alp_progress_v1";
+let S = { done: {}, quiz: {}, lv: 0 };
+try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(S, JSON.parse(raw)); } catch (e) {}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+/* ---------- render methods ---------- */
+const box = document.getElementById("methods");
+METHODS.forEach((m, i) => {
+  const id = "m" + (i + 1);
+  const el = document.createElement("section");
+  el.className = "method" + (S.done[id] ? " done" : "");
+  el.id = id;
+  let quizHtml = `<div class="quiz"><h3>✍️ 自测一下（做对才算过关）</h3>`;
+  m.quiz.forEach((q, qi) => {
+    const qid = id + "-" + qi;
+    quizHtml += `<div class="q"><div class="qt">${qi + 1}. ${q.q}</div>`;
+    q.opts.forEach((o, oi) => {
+      quizHtml += `<div class="opt" data-q="${qid}" data-o="${oi}">${String.fromCharCode(65 + oi)}. ${o}</div>`;
+    });
+    quizHtml += `<div class="exp" id="exp-${qid}">💡 ${q.exp}</div></div>`;
+  });
+  quizHtml += `</div>`;
+  el.innerHTML = `
+    <div class="method-head"><div class="num">${m.n}</div><h2>${m.title}</h2><span class="arrow">▶</span></div>
+    <div class="method-body">
+      <p class="why">${m.why}</p>
+      <div class="prompt"><button class="copy">复制提示词</button>${m.prompt.replace(/</g, "&lt;")}</div>
+      <p class="point"><b>要点：</b>${m.point}</p>
+      ${quizHtml}
+      <div class="done-row"><input type="checkbox" data-done="${id}" ${S.done[id] ? "checked" : ""}> 我已学完这一块并做对了自测</div>
+    </div>`;
+  box.appendChild(el);
+
+  // toggle
+  el.querySelector(".method-head").addEventListener("click", () => el.classList.toggle("open"));
+  // copy
+  el.querySelector(".copy").addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    const t = m.prompt;
+    const done = () => { ev.target.textContent = "已复制 ✓"; setTimeout(() => ev.target.textContent = "复制提示词", 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done).catch(() => fallbackCopy(t, done));
+    else fallbackCopy(t, done);
+  });
+  // quiz options
+  el.querySelectorAll(".opt").forEach(opt => {
+    const qid = opt.dataset.q;
+    // restore
+    if (S.quiz[qid] !== undefined) paint(opt, parseInt(opt.dataset.o, 10) === S.quiz[qid], qid);
+    opt.addEventListener("click", () => {
+      const chosen = parseInt(opt.dataset.o, 10);
+      S.quiz[qid] = chosen; save();
+      el.querySelectorAll(`.opt[data-q="${qid}"]`).forEach(o => paint(o, parseInt(o.dataset.o, 10) === chosen, qid));
+    });
+  });
+  function paint(opt, isChosen, qid) {
+    const correct = METHODS[i].quiz[parseInt(qid.split("-")[1], 10)].a;
+    opt.classList.remove("dim", "right", "wrong");
+    if (parseInt(opt.dataset.o, 10) === correct) opt.classList.add("right");
+    else if (isChosen) opt.classList.add("wrong");
+    else opt.classList.add("dim");
+    document.getElementById("exp-" + qid).classList.add("show");
+  }
+  // done checkbox
+  el.querySelector("[data-done]").addEventListener("change", (ev) => {
+    S.done[id] = ev.target.checked; save(); refresh();
+  });
+});
+function fallbackCopy(t, done) {
+  const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta);
+  ta.select(); try { document.execCommand("copy"); done(); } catch (e) {} document.body.removeChild(ta);
+}
+
+/* ---------- ladder ---------- */
+document.querySelectorAll(".lv").forEach(lv => {
+  if (S.lv === parseInt(lv.dataset.lv, 10)) lv.classList.add("on");
+  lv.addEventListener("click", () => {
+    document.querySelectorAll(".lv").forEach(x => x.classList.remove("on"));
+    lv.classList.add("on");
+    S.lv = parseInt(lv.dataset.lv, 10); save();
+  });
+});
+
+/* ---------- flip cards ---------- */
+const grid = document.getElementById("cardGrid");
+CARDS.forEach(c => {
+  const el = document.createElement("div");
+  el.className = "flip";
+  el.innerHTML = `<div class="flip-inner">
+    <div class="face front">${c.f}<small>点击翻面</small></div>
+    <div class="face back">${c.b}</div></div>`;
+  el.addEventListener("click", () => el.classList.toggle("flipped"));
+  grid.appendChild(el);
+});
+
+/* ---------- progress ---------- */
+function refresh() {
+  const total = METHODS.length;
+  const done = Object.keys(S.done).filter(k => S.done[k]).length;
+  const pct = Math.round((done / total) * 100);
+  document.getElementById("barFill").style.width = pct + "%";
+  document.getElementById("pctText").textContent = pct + "%（" + done + "/" + total + "）";
+  METHODS.forEach((m, i) => {
+    const el = document.getElementById("m" + (i + 1));
+    el.classList.toggle("done", !!S.done["m" + (i + 1)]);
+  });
+}
+refresh();
+
+/* ---------- reset ---------- */
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (!confirm("确定清空本机保存的学习进度吗？")) return;
+  S = { done: {}, quiz: {}, lv: 0 }; save(); location.reload();
+});
+</script>
+</body>
+</html>
